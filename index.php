@@ -50,14 +50,14 @@
 
             <!-- Nav Item - Agendar -->
             <li class="nav-item">
-                <a class="nav-link carregar-pagina" href="pages/agendar.php">
+                <a class="nav-link carregar-pagina" href="pages/agendamentos.php">
                     <i class="bi bi-calendar3-week"></i>
                     <span>Agendar</span></a>
             </li>
 
             <!-- Nav Item - Tables -->
             <li class="nav-item">
-                <a class="nav-link carregar-pagina" href="pages/agendamentos.php">
+                <a class="nav-link carregar-pagina" href="pages/meus_agendamentos.php">
                     <i class="bi bi-card-checklist"></i>
                     <span>Meus agendamentos</span></a>
             </li>
