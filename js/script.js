@@ -380,6 +380,85 @@ document.addEventListener('change', function (event) {
 
 });
 
+// =========================================================
+// EXCLUIR AGENDAMENTO
+// =========================================================
+
+document.addEventListener("click", function (event) {
+
+    const botaoExcluir = event.target.closest(".btnExcluirAgendamento");
+
+    if (!botaoExcluir) {
+        return;
+    }
+
+    const id = botaoExcluir.dataset.id;
+
+    if (!id) {
+        return;
+    }
+
+    const confirmar = confirm(
+        "Tem certeza que deseja excluir este agendamento?"
+    );
+
+    if (!confirmar) {
+        return;
+    }
+
+    const dados = new FormData();
+
+    dados.append("acao", "excluir");
+    dados.append("id", id);
+
+    fetch("controllers/AgendamentoController.php", {
+        method: "POST",
+        body: dados
+    })
+    .then(function (resposta) {
+
+        if (!resposta.ok) {
+            throw new Error("Erro ao excluir o agendamento.");
+        }
+
+        return resposta.json();
+
+    })
+    .then(function (resultado) {
+
+        if (resultado.sucesso) {
+
+            const agendaDia = document.getElementById("agendaDia");
+
+            if (agendaDia && agendaDia.dataset.data) {
+
+                carregarPagina(
+                    "pages/meus_agendamentos.php?data=" +
+                    encodeURIComponent(agendaDia.dataset.data)
+                );
+
+            } else {
+
+                carregarPagina("pages/meus_agendamentos.php");
+
+            }
+
+        } else {
+
+            alert(resultado.mensagem);
+
+        }
+
+    })
+    .catch(function (erro) {
+
+        console.error(erro);
+
+        alert("Erro ao excluir o agendamento.");
+
+    });
+
+});
 
 
 // =========================================================

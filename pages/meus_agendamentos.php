@@ -182,6 +182,9 @@ $dataFormatada = date(
                                 <th>
                                     Telefone
                                 </th>
+                                <th>
+                                    
+                                </th>
 
                             </tr>
 
@@ -219,7 +222,20 @@ $dataFormatada = date(
 
                                     </td>
 
+                                    <td>
+                                        <button
+                                        type="button"
+                                        class="btn btn-danger btn-sm btnExcluirAgendamento"
+                                        data-id="<?= $agendamento['id'] ?>">
+
+                                        <i class="bi bi-trash"></i>
+                                        Excluir
+                                    </button>
+                                    </td>
+
+                                    
                                 </tr>
+                                
 
                             <?php endforeach; ?>
 

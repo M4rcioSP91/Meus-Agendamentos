@@ -39,7 +39,7 @@ body {
 
 /* Menu lateral*/
 #accordionSidebar {
-    width: 224px;
+    width: 224px;    
     min-height: 100vh;
 
     background: linear-gradient(
@@ -50,6 +50,11 @@ body {
 
     flex-shrink: 0;
 
+}
+
+#nav{
+    display: flex;
+    min-height: 100vh;
 }
 
  /* botão primario */

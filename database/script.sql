@@ -27,3 +27,13 @@ CREATE TABLE tb_agendamentos (
         hora_agendamento
     )
 );
+
+//cria a tabela de usuarios
+
+CREATE TABLE tb_usuarios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

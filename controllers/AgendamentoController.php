@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../models/AgendamentoModel.php';
 
+
 class AgendamentoController
 {
     private $agendamento;
@@ -30,7 +31,7 @@ class AgendamentoController
     {
         $this->agendamento = new Agendamento($pdo);
     }
-
+    
 
     // =========================================================
     // RETORNAR HORÁRIOS DISPONÍVEIS
@@ -56,6 +57,7 @@ class AgendamentoController
 
         return array_values($disponiveis);
     }
+
 
     // =========================================================
     // LISTAR AGENDAMENTOS
@@ -182,6 +184,33 @@ class AgendamentoController
         ];
     }
 
+    // =========================================================
+    // EXCLUIR AGENDAMENTOS
+    // =========================================================
+
+    public function excluir($id)
+{
+    if (empty($id) || !is_numeric($id)) {
+        return [
+            'sucesso' => false,
+            'mensagem' => 'Agendamento inválido.'
+        ];
+    }
+
+    $resultado = $this->agendamento->excluir((int) $id);
+
+    if ($resultado) {
+        return [
+            'sucesso' => true,
+            'mensagem' => 'Agendamento excluído com sucesso.'
+        ];
+    }
+
+    return [
+        'sucesso' => false,
+        'mensagem' => 'Não foi possível excluir o agendamento.'
+    ];
+}
 
     // =========================================================
     // RETORNAR TODOS OS HORÁRIOS
@@ -262,15 +291,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $controller = new AgendamentoController($pdo);
 
+    // Verifica qual ação foi solicitada
+    $acao = $_POST['acao'] ?? 'criar';
 
-    // Recebe os dados do formulário
+
+    // =========================================================
+    // EXCLUIR AGENDAMENTO
+    // =========================================================
+
+    if ($acao === 'excluir') {
+
+        $id = $_POST['id'] ?? '';
+
+        $resultado = $controller->excluir($id);
+
+        header('Content-Type: application/json');
+
+        echo json_encode($resultado);
+
+        exit;
+    }
+
+
+    // =========================================================
+    // CRIAR AGENDAMENTO
+    // =========================================================
+
     $nome = $_POST['nome'] ?? '';
     $telefone = $_POST['telefone'] ?? '';
     $data = $_POST['data'] ?? '';
     $hora = $_POST['hora'] ?? '';
 
-
-    // Cria o agendamento
     $resultado = $controller->criar(
         $nome,
         $telefone,
@@ -287,8 +338,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     // Volta para a página de agendamento
-    header('Location: ../index.php?pagina=agendamentos');
+    header('Location: ../index.php');
 
     exit;
 }
+
+
 

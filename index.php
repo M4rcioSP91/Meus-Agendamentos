@@ -1,5 +1,10 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,6 +21,8 @@
     <!--Scripts-->
     <script src="js/script.js" defer></script>
     <script src="js/scriptTema.js" defer></script>
+    <!--Scripts BootStrap-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" defer></script>
 
 </head>
 <body>
@@ -23,7 +30,7 @@
         <div id="wrapper">
 
         <!-- Menu lateral -->
-        <nav>
+        <nav id="nav">
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Logo do site -->
@@ -56,38 +63,49 @@
             </li>
 
             <!-- Nav Item - Tables -->
-            <li class="nav-item">
-                <a class="nav-link carregar-pagina" href="pages/meus_agendamentos.php">
-                    <i class="bi bi-card-checklist"></i>
-                    <span>Meus agendamentos</span></a>
-            </li>
+            <?php if (!empty($_SESSION['usuario_logado'])): ?>
 
-            <!-- Divisão -->
-            <hr class="sidebar-divider">
+                <li class="nav-item">
+                    <a
+                        class="nav-link carregar-pagina"
+                        href="pages/meus_agendamentos.php"
+                    >
+                        <i class="bi bi-calendar-check"></i>
+                        <span>Meus Agendamentos</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link carregar-pagina" href="pages/clientes.php">
-                    <i class="bi bi-person"></i>
-                    <span>Clientes</span></a>
-            </li>
+                <li class="nav-item">
+                    <a
+                        class="nav-link carregar-pagina"
+                        href="pages/clientes.php"
+                    >
+                        <i class="bi bi-person-lines-fill"></i>
+                        <span>Clientes</span>
+                    </a>
+                </li>
 
-            <!-- Divisão -->
-            <hr class="sidebar-divider">
+                <li class="nav-item">
+                    <a
+                        class="nav-link carregar-pagina"
+                        href="pages/galeria.php"
+                    >
+                        <i class="bi bi-file-earmark-image"></i>
+                        <span>Galeria</span>
+                    </a>
+                </li>
 
-            <li class="nav-item">
-                <a class="nav-link carregar-pagina" href="pages/galeria.php">
-                    <i class="bi bi-image"></i>
-                    <span>Galeria</span></a>
-            </li>
+                <li class="nav-item">
+                    <a
+                        class="nav-link carregar-pagina"
+                        href="pages/historico.php"
+                    >
+                        <i class="bi bi-clock-history"></i>
+                        <span>Histórico</span>
+                    </a>
+                </li>
 
-             <!-- Divisão -->
-            <hr class="sidebar-divider">
-
-            <li class="nav-item">
-                <a class="nav-link carregar-pagina" href="pages/historico.php">
-                    <i class="bi bi-clock-history"></i>
-                    <span>Histórico</span></a>
-            </li>
+            <?php endif; ?>
             
 
             <!-- Divisão -->
@@ -126,41 +144,98 @@
 
                     <!-- Menu superior navegação -->
 
-                    <ul class="navbar-nav ml-auto">
+                    <?php if (!empty($_SESSION['usuario_logado'])): ?>
 
-                        <div class="topbar-divider d-none d-sm-block"></div>
+                        <ul class="navbar-nav ms-auto sidebarUser" id="accordionUser">
 
-                        <!-- Nav Item - User Information -->
-                        <li class="nav-item dropdown no-arrow">
-                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
-                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">
-                                    Usuario
-                                </span>
+                            <!-- Divisão -->
+                            <div class="topbar-divider d-none d-sm-block"></div>
 
-                                <img class="img-profile rounded-circle"
-                                    src="img/undraw_profile.svg">
-                            </a>
-                            <!-- Menu suspenso - Informações do usuário -->
-                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
-                                aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Perfil
+                            <!-- Usuário -->
+                            <li class="nav-item dropdown">
+
+                                <a
+                                    class="nav-link dropdown-toggle"
+                                    href="#"
+                                    id="userDropdown"
+                                    role="button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false"
+                                >
+
+                                    <span class="me-2 d-none d-lg-inline text-gray-600 small">
+                                        <?= htmlspecialchars($_SESSION['usuario_nome']) ?>
+                                    </span>
+
+                                    <img
+                                        class="img-profile rounded-circle"
+                                        src="img/undraw_profile.svg"
+                                        alt="Usuário"
+                                    >
+
                                 </a>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Configurações
+
+                                <!-- Menu do usuário -->
+                                <div
+                                    class="dropdown-menu dropdown-menu-end shadow"
+                                    aria-labelledby="userDropdown"
+                                >
+
+                                    <!-- Perfil -->
+                                    <a
+                                        class="dropdown-item"
+                                        href="#"
+                                    >
+                                        <i class="bi bi-person me-2"></i>
+                                        Perfil
+                                    </a>
+
+                                    <!-- Configurações -->
+                                    <a
+                                        class="dropdown-item"
+                                        href="#"
+                                    >
+                                        <i class="bi bi-gear me-2"></i>
+                                        Configurações
+                                    </a>
+
+                                    <div class="dropdown-divider"></div>
+
+                                    <!-- Sair -->
+                                    <a
+                                        class="dropdown-item"
+                                        href="controllers/LogoutController.php"
+                                    >
+                                        <i class="bi bi-box-arrow-right me-2"></i>
+                                        Sair
+                                    </a>
+
+                                </div>
+
+                            </li>
+
+                        </ul>
+
+                    <?php else: ?>
+
+                        <!-- Usuário não autenticado -->
+                        <ul class="navbar-nav ms-auto">
+
+                            <li class="nav-item">
+
+                                <a
+                                    class="nav-link"
+                                    href="pages/login.php"
+                                >
+                                    <i class="bi bi-box-arrow-in-right me-1"></i>
+                                    Login
                                 </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#" data-bs-toggle="modal" data-target="#logoutModal">
-                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Sair
-                                </a>
-                            </div>
-                        </li>
-                    </ul>
+
+                            </li>
+
+                        </ul>
+
+                    <?php endif; ?>
 
                     <!-- troca de tema-->
                         <div class="topbar-divider d-none d-sm-block"></div>

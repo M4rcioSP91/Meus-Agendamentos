@@ -120,5 +120,22 @@ class Agendamento
 
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-}
 
+
+    // =========================================================
+    // EXCLUIR AGENDAMENTOS
+    // =========================================================
+
+    public function excluir($id)
+    {
+        $sql = "DELETE FROM tb_agendamentos
+                WHERE id = :id";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+
+        return $stmt->execute();
+    }
+
+}
