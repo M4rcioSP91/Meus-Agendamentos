@@ -84,7 +84,7 @@ function carregarPagina(pagina) {
 }
 
 // =========================================================
-// LINKS QUE DEVEM SER CARREGADOS COM FETCH
+// LINKS CARREGADOS COM FETCH
 // =========================================================
 
 document.addEventListener(
@@ -115,6 +115,124 @@ document.addEventListener(
 
     }
 );
+
+// ======================================================
+// HOME
+// ======================================================
+
+
+/* =========================================
+   QUEM SOMOS - EDITAR E SALVAR DESCRIÇÃO
+========================================= */
+
+// Abrir edição ou cancelar
+document.addEventListener("click", function (event) {
+
+    const btnEditar = event.target.closest("#btnEditarQuemSomos");
+    const btnCancelar = event.target.closest("#btnCancelarQuemSomos");
+
+    const formulario = document.getElementById("formQuemSomos");
+    const texto = document.getElementById("textoQuemSomos");
+    const mensagem = document.getElementById("mensagemQuemSomos");
+
+    if (!formulario || !texto) {
+        return;
+    }
+
+    if (btnEditar) {
+        formulario.classList.remove("d-none");
+        texto.classList.add("d-none");
+        btnEditar.classList.add("d-none");
+
+        if (mensagem) {
+            mensagem.classList.add("d-none");
+        }
+    }
+
+    if (btnCancelar) {
+        formulario.reset();
+        formulario.classList.add("d-none");
+        texto.classList.remove("d-none");
+
+        const botaoEditar = document.getElementById("btnEditarQuemSomos");
+
+        if (botaoEditar) {
+            botaoEditar.classList.remove("d-none");
+        }
+
+        if (mensagem) {
+            mensagem.classList.add("d-none");
+        }
+    }
+});
+
+
+// Salvar descrição
+document.addEventListener("submit", async function (event) {
+
+    const formulario = event.target.closest("#formQuemSomos");
+
+    if (!formulario) {
+        return;
+    }
+
+    event.preventDefault();
+
+    const mensagem = document.getElementById("mensagemQuemSomos");
+    const botaoSalvar = formulario.querySelector(
+        'button[type="submit"]'
+    );
+
+    mensagem.className = "alert mt-3 mb-0 alert-info";
+    mensagem.textContent = "Salvando descrição...";
+
+    botaoSalvar.disabled = true;
+
+    try {
+        const resposta = await fetch(
+            "controllers/QuemSomosController.php",
+            {
+                method: "POST",
+                body: new FormData(formulario)
+            }
+        );
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok || !resultado.sucesso) {
+            throw new Error(
+                resultado.mensagem || "Não foi possível salvar."
+            );
+        }
+
+        // Atualiza o texto exibido sem interpretar HTML enviado pelo usuário.
+        const descricao = document.getElementById("descricaoQuemSomos");
+        const paragrafo = document.querySelector("#textoQuemSomos p");
+
+        paragrafo.textContent = descricao.value;
+        paragrafo.style.whiteSpace = "pre-line";
+
+        formulario.classList.add("d-none");
+        document.getElementById("textoQuemSomos").classList.remove("d-none");
+
+        const botaoEditar = document.getElementById("btnEditarQuemSomos");
+
+        if (botaoEditar) {
+            botaoEditar.classList.remove("d-none");
+        }
+
+        mensagem.className = "alert mt-3 mb-0 alert-success";
+        mensagem.textContent = resultado.mensagem;
+
+    } catch (erro) {
+        mensagem.className = "alert mt-3 mb-0 alert-danger";
+        mensagem.textContent = erro.message;
+
+    } finally {
+        botaoSalvar.disabled = false;
+    }
+});
+
 
 // =========================================================
 // RECARREGA A PAGINA AGENDAR AO CLICAR EM CONFIRMAR

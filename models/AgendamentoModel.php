@@ -138,4 +138,35 @@ class Agendamento
         return $stmt->execute();
     }
 
+
+
+    // =========================================================
+    // LISTAR ATENDIMENTOS
+    // =========================================================
+
+        public function contarTodosAtendimentos()
+    {
+        $sql = "SELECT COUNT(*) FROM tb_agendamentos";
+
+        $stmt = $this->pdo->query($sql);
+
+        return (int) $stmt->fetchColumn();
+    }
+
+    public function listarAtendimentosPaginados($limite, $offset)
+    {
+        $sql = "SELECT *
+                FROM tb_agendamentos
+                ORDER BY data_agendamento DESC, hora_agendamento DESC
+                LIMIT :limite OFFSET :offset";
+
+        $stmt = $this->pdo->prepare($sql);
+
+        $stmt->bindValue(':limite', (int) $limite, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -37,3 +37,18 @@ CREATE TABLE tb_usuarios (
     senha VARCHAR(255) NOT NULL,
     criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+//criar Tabela para pagina home 
+
+CREATE TABLE IF NOT EXISTS tb_quem_somos (
+    id INT PRIMARY KEY,
+    descricao TEXT NOT NULL,
+    atualizado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO tb_quem_somos (id, descricao)
+VALUES (
+    1,
+    'Somos uma empresa comprometida com a qualidade, a organização e o atendimento personalizado. Nosso objetivo é oferecer praticidade e uma ótima experiência aos nossos clientes.'
+);
