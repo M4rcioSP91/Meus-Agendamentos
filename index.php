@@ -75,7 +75,7 @@ session_start();
                     </a>
                 </li>
 
-                <li class="nav-item">
+<!--                 <li class="nav-item">
                     <a
                         class="nav-link carregar-pagina"
                         href="pages/clientes.php"
@@ -83,7 +83,7 @@ session_start();
                         <i class="bi bi-person-lines-fill"></i>
                         <span>Clientes</span>
                     </a>
-                </li>
+                </li> -->
 
                 <li class="nav-item">
                     <a
@@ -182,18 +182,18 @@ session_start();
                                 >
 
                                     <!-- Perfil -->
-                                    <a
+                                   <!--  <a
                                         class="dropdown-item"
                                         href="#"
                                     >
                                         <i class="bi bi-person me-2"></i>
                                         Perfil
-                                    </a>
+                                    </a> -->
 
                                     <!-- Configurações -->
                                     <a
-                                        class="dropdown-item"
-                                        href="#"
+                                        class="carregar-pagina dropdown-item"
+                                        href="pages/configuracoes.php"
                                     >
                                         <i class="bi bi-gear me-2"></i>
                                         Configurações

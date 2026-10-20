@@ -1,5 +1,5 @@
 // =========================================================
-// BOTÃO EXPANDIR / RECOLHER MENU LATERAL
+// BOTÃO EXPANDIR / RECOLER MENU LATERAL
 // =========================================================
 
 const sidebarToggle = document.getElementById('sidebarToggle');
@@ -20,6 +20,7 @@ if (sidebarToggle && sidebar) {
 // FUNÇÃO PARA CARREGAR PÁGINAS
 // =========================================================
 
+
 function carregarPagina(pagina) {
 
     const conteudo = document.getElementById("conteudo");
@@ -28,33 +29,19 @@ function carregarPagina(pagina) {
         return;
     }
 
-
-    // Mostra mensagem enquanto carrega
-
     conteudo.innerHTML = `
         <div class="text-center mt-5">
-
-            <div class="spinner-border" role="status">
-            </div>
-
-            <p class="mt-2">
-                Carregando...
-            </p>
-
+            <div class="spinner-border" role="status"></div>
+            <p class="mt-2">Carregando...</p>
         </div>
     `;
-
-
-    // Carrega a página
 
     fetch(pagina)
 
         .then(function (resposta) {
 
             if (!resposta.ok) {
-
                 throw new Error("Erro ao carregar página.");
-
             }
 
             return resposta.text();
@@ -63,9 +50,28 @@ function carregarPagina(pagina) {
 
         .then(function (html) {
 
-            // Coloca o conteúdo dentro da div
-
             conteudo.innerHTML = html;
+
+            // Se carregou a página de agendamento,
+            // verifica automaticamente a data selecionada.
+            const formulario =
+                conteudo.querySelector("#formAgendamento");
+
+            if (formulario) {
+
+                const campoData =
+                    formulario.querySelector("#data");
+
+                if (campoData && campoData.value) {
+
+                    campoData.dispatchEvent(
+                        new Event("change", {
+                            bubbles: true
+                        })
+                    );
+
+                }
+            }
 
         })
 
@@ -80,8 +86,8 @@ function carregarPagina(pagina) {
             `;
 
         });
-
 }
+
 
 // =========================================================
 // LINKS CARREGADOS COM FETCH
@@ -357,146 +363,169 @@ document.addEventListener('click', function (event) {
 });
 
 
-// =========================================================
-// AGENDAMENTO - ALTERAR DATA
-// =========================================================
 
-document.addEventListener('change', function (event) {
+ 
+ // =========================================================
+ // AGENDAMENTO - ALTERAR DATA / VERIFICAR FERIADOS
+ // =========================================================
 
-    // Verifica se o campo alterado é a data
+document.addEventListener("change", async function (event) {
 
-    if (event.target.id !== 'data') {
+    if (event.target.id !== "data") {
         return;
     }
 
-
-    const data = event.target.value;
-
+    const campoData = event.target;
+    const data = campoData.value;
 
     const listaHorarios =
-        document.getElementById('listaHorarios');
-
+        document.getElementById("listaHorarios");
 
     const campoHora =
-        document.getElementById('hora');
+        document.getElementById("hora");
 
-
-    // Verifica se os elementos existem
+    const btnConfirmar =
+        document.getElementById("btnConfirmarAgendamento");
 
     if (!listaHorarios || !campoHora) {
         return;
     }
 
+    // Desabilita Confirmar durante a consulta
+    if (btnConfirmar) {
+        btnConfirmar.disabled = true;
+    }
 
-    // Limpa horário selecionado
-
-    campoHora.value = '';
-
-
-    // Mensagem enquanto carrega
+    // Limpa a seleção anterior
+    campoHora.value = "";
 
     listaHorarios.innerHTML = `
         <div class="col-12">
-
             <div class="alert alert-info">
-                Carregando horários...
+                Verificando disponibilidade...
             </div>
-
         </div>
     `;
 
+    if (!data) {
+        listaHorarios.innerHTML = "";
+        return;
+    }
 
-    // =====================================================
-    // BUSCA HORÁRIOS DISPONÍVEIS
-    // =====================================================
+    // PRIMEIRO: verifica se é feriado
+    const bloqueado = await verificarFeriado(data);
 
-    fetch(
-        'controllers/AgendamentoController.php?buscar_horarios=1&data='
-        + encodeURIComponent(data)
-    )
+    // Ignora consultas antigas
+    if (
+        !campoData.isConnected ||
+        campoData.value !== data
+    ) {
+        return;
+    }
 
-    .then(function (response) {
+    // Não permite agendamento em feriados
+    // ou quando a consulta falhar
+    if (bloqueado) {
+        listaHorarios.innerHTML = "";
+        return;
+    }
 
-        if (!response.ok) {
+    // SEGUNDO: consulta os horários disponíveis
+    try {
 
-            throw new Error('Erro ao buscar horários.');
+        const resposta = await fetch(
+            "controllers/AgendamentoController.php" +
+            "?buscar_horarios=1&data=" +
+            encodeURIComponent(data)
+        );
 
+        if (!resposta.ok) {
+            throw new Error("Erro ao buscar horários.");
         }
 
-        return response.json();
+        const dados = await resposta.json();
 
-    })
+        if (
+            !campoData.isConnected ||
+            campoData.value !== data
+        ) {
+            return;
+        }
 
-    .then(function (dados) {
+        if (!dados.sucesso || !Array.isArray(dados.horarios)) {
+            throw new Error(
+                dados.mensagem || "Resposta inválida do servidor."
+            );
+        }
 
-        listaHorarios.innerHTML = '';
-
-
-        // Nenhum horário disponível
+        listaHorarios.innerHTML = "";
 
         if (dados.horarios.length === 0) {
 
             listaHorarios.innerHTML = `
                 <div class="col-12">
-
                     <div class="alert alert-warning">
-                        Não existem horários disponíveis para esta data.
+                        Não existem horários disponíveis
+                        para esta data.
                     </div>
-
                 </div>
             `;
 
             return;
         }
 
-
-        // Cria os botões
-
+        // Cria os botões de horários
         dados.horarios.forEach(function (hora) {
 
-            const coluna = document.createElement('div');
+            const coluna = document.createElement("div");
 
-            coluna.className =
-                'col-6 col-md-3 col-lg-2';
+            coluna.className = "col-6 col-md-3 col-lg-2";
 
+            const botao = document.createElement("button");
 
-            const botao = document.createElement('button');
-
-            botao.type = 'button';
-
+            botao.type = "button";
             botao.className =
-                'btn btn-outline-primary w-100';
+                "btn btn-outline-primary w-100";
 
             botao.dataset.hora = hora;
-
             botao.textContent = hora;
 
-
             coluna.appendChild(botao);
-
             listaHorarios.appendChild(coluna);
 
         });
 
-    })
+        // Habilita Confirmar somente após
+        // carregar horários disponíveis
+        if (btnConfirmar) {
+            btnConfirmar.disabled = false;
+        }
 
-    .catch(function (erro) {
+    } catch (erro) {
 
         console.error(erro);
 
+        if (
+            !campoData.isConnected ||
+            campoData.value !== data
+        ) {
+            return;
+        }
+
         listaHorarios.innerHTML = `
             <div class="col-12">
-
                 <div class="alert alert-danger">
                     Erro ao carregar os horários.
+                    Tente novamente.
                 </div>
-
             </div>
         `;
 
-    });
+    }
 
 });
+
+
 
 // =========================================================
 // EXCLUIR AGENDAMENTO
@@ -652,6 +681,82 @@ document.addEventListener("input", function (event) {
     event.target.value = telefone;
 
 });
+
+// =========================================================
+// MENSAGEM API FERIADOS
+// =========================================================
+
+
+async function verificarFeriado(data) {
+
+    const mensagem = document.getElementById("mensagemFeriado");
+    const listaHorarios = document.getElementById("listaHorarios");
+    const campoHora = document.getElementById("hora");
+
+    if (!mensagem || !data) return false;
+
+    mensagem.textContent = "Verificando feriados...";
+
+    try {
+        const resposta = await fetch(
+            "controllers/FeriadoController.php?data=" +
+            encodeURIComponent(data)
+        );
+
+        const dados = await resposta.json();
+
+        // Ignora respostas de datas que não estão mais selecionadas
+        if (document.getElementById("data")?.value !== data) {
+            return true;
+        }
+
+        if (!resposta.ok || !dados.sucesso) {
+            throw new Error(dados.mensagem || "Erro na consulta.");
+        }
+
+        mensagem.innerHTML = "";
+
+        if (dados.feriado) {
+
+            const alerta = document.createElement("div");
+            alerta.className = "alert alert-warning";
+            alerta.textContent =
+                `Não há atendimento nesta data: ${dados.nome}.`;
+
+            mensagem.appendChild(alerta);
+
+            if (listaHorarios) {
+                listaHorarios.innerHTML = "";
+            }
+
+            if (campoHora) {
+                campoHora.value = "";
+            }
+
+            return true;
+        }
+
+        return false;
+
+    } catch (erro) {
+        console.error(erro);
+
+        mensagem.innerHTML = `
+            <div class="alert alert-danger">
+                Não foi possível verificar os feriados.
+                Tente novamente.
+            </div>
+        `;
+
+        // Por segurança, não libera horários sem validação
+        if (listaHorarios) listaHorarios.innerHTML = "";
+        if (campoHora) campoHora.value = "";
+
+        return true;
+    }
+}
+
+
 
 
 //********************************** Galeria*********************************
@@ -1221,3 +1326,88 @@ document.addEventListener("click", function (event) {
     );
 
 });
+
+//==========================================
+//CONFIGURAÇÕES / ALTERAR SENHA
+//==========================================
+
+
+document.addEventListener("submit", async function (event) {
+
+    if (event.target.id !== "formAlterarSenha") return;
+
+    event.preventDefault();
+
+    const form = event.target;
+    const mensagem = form.querySelector("#mensagemAlterarSenha");
+    const botao = form.querySelector('button[type="submit"]');
+
+    const novaSenha = form.querySelector("#novaSenha").value;
+    const confirmarSenha = form.querySelector("#confirmarSenha").value;
+
+    mensagem.innerHTML = "";
+
+    if (novaSenha.length < 8) {
+        mensagem.innerHTML = `
+            <div class="alert alert-danger">
+                A senha deve ter pelo menos 8 caracteres.
+            </div>
+        `;
+        return;
+    }
+
+    if (novaSenha !== confirmarSenha) {
+        mensagem.innerHTML = `
+            <div class="alert alert-danger">
+                As novas senhas não coincidem.
+            </div>
+        `;
+        return;
+    }
+
+    botao.disabled = true;
+
+    try {
+
+        const resposta = await fetch(
+            "controllers/UsuarioController.php",
+            {
+                method: "POST",
+                body: new FormData(form)
+            }
+        );
+
+        const dados = await resposta.json();
+
+        mensagem.innerHTML = "";
+
+        const alerta = document.createElement("div");
+
+        alerta.className = dados.sucesso
+            ? "alert alert-success"
+            : "alert alert-danger";
+
+        alerta.textContent = dados.mensagem;
+
+        mensagem.appendChild(alerta);
+
+        if (dados.sucesso) {
+            form.reset();
+        }
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        mensagem.innerHTML = `
+            <div class="alert alert-danger">
+                Erro de comunicação com o servidor.
+            </div>
+        `;
+
+    } finally {
+        botao.disabled = false;
+    }
+
+});
+

@@ -58,7 +58,7 @@ $horarios = $controller->getHorarios();
                 Escolha uma data e um horário para realizar seu agendamento.
             </p>
         </div>
-
+        
     </div>
 
 
@@ -130,6 +130,9 @@ $horarios = $controller->getHorarios();
                         Domingos não estão disponíveis para agendamento.
                     </small>
 
+                    <!--Mensagem recebida pela BrasilAPI-->
+                    <div id="mensagemFeriado" class="mt-2" aria-live="polite"></div>
+
                 </div>
 
 
@@ -174,7 +177,9 @@ $horarios = $controller->getHorarios();
                     
                     <button
                         type="submit"
+                        id="btnConfirmarAgendamento"
                         class="btn btn-primary"
+                        disabled
                     >
                         Confirmar
                     </button>

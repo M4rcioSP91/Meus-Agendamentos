@@ -2,13 +2,12 @@
 <?php
 
 require_once __DIR__ . '/../models/AgendamentoModel.php';
-
+require_once __DIR__ . '/../services/FeriadoService.php';
 
 class AgendamentoController
 {
     private $agendamento;
 
-    // Horários disponíveis
     private $horarios = [
         '08:00',
         '09:00',
@@ -22,7 +21,6 @@ class AgendamentoController
         '17:00'
     ];
 
-
     // =========================================================
     // CONSTRUTOR
     // =========================================================
@@ -31,7 +29,17 @@ class AgendamentoController
     {
         $this->agendamento = new Agendamento($pdo);
     }
-    
+
+    // =========================================================
+    // CONSULTAR FERIADOS - BRASILAPI
+    // =========================================================
+
+    private function consultarFeriado($data)
+    {
+        $feriadoService = new FeriadoService();
+
+        return $feriadoService->verificar($data);
+    }
 
     // =========================================================
     // RETORNAR HORÁRIOS DISPONÍVEIS
@@ -39,25 +47,35 @@ class AgendamentoController
 
     public function horariosDisponiveis($data)
     {
-        // Verifica se a data é válida
         if (!$this->dataValida($data)) {
             return [];
         }
 
-        // Domingo não possui horários
+        if ($data < date('Y-m-d')) {
+            return [];
+        }
+
         if ($this->ehDomingo($data)) {
             return [];
         }
 
-        // Busca os horários já ocupados no banco
+        // Bloqueia feriados nacionais
+        $feriado = $this->consultarFeriado($data);
+
+        if ($feriado !== null) {
+            return [];
+        }
+
+        // Consulta os horários ocupados
         $ocupados = $this->agendamento->horariosOcupados($data);
 
-        // Remove os horários ocupados
-        $disponiveis = array_diff($this->horarios, $ocupados);
+        $disponiveis = array_diff(
+            $this->horarios,
+            $ocupados
+        );
 
         return array_values($disponiveis);
     }
-
 
     // =========================================================
     // LISTAR AGENDAMENTOS
@@ -65,32 +83,14 @@ class AgendamentoController
 
     public function listarPorData($data)
     {
-        // Data atual
-
         $hoje = date('Y-m-d');
 
-
-        // Se a data estiver vazia, usa hoje
-
-        if (empty($data)) {
-
+        if (empty($data) || $data < $hoje) {
             $data = $hoje;
-
         }
-
-
-        // Impede visualizar dias anteriores
-
-        if ($data < $hoje) {
-
-            $data = $hoje;
-
-        }
-
 
         return $this->agendamento->listarPorData($data);
     }
-
 
     // =========================================================
     // CRIAR AGENDAMENTO
@@ -98,7 +98,7 @@ class AgendamentoController
 
     public function criar($nome, $telefone, $data, $hora)
     {
-        // Nome
+        // Valida nome
         if (empty(trim($nome))) {
             return [
                 'sucesso' => false,
@@ -106,8 +106,7 @@ class AgendamentoController
             ];
         }
 
-
-        // Telefone
+        // Valida telefone
         if (empty(trim($telefone))) {
             return [
                 'sucesso' => false,
@@ -115,8 +114,7 @@ class AgendamentoController
             ];
         }
 
-
-        // Data
+        // Valida data
         if (!$this->dataValida($data)) {
             return [
                 'sucesso' => false,
@@ -124,42 +122,69 @@ class AgendamentoController
             ];
         }
 
-
-        // Não permite data anterior
+        // Impede datas anteriores
         if ($data < date('Y-m-d')) {
             return [
                 'sucesso' => false,
-                'mensagem' => 'Não é possível agendar uma data que já passou.'
+                'mensagem' =>
+                    'Não é possível agendar uma data que já passou.'
             ];
         }
 
-
-        // Não permite domingo
+        // Impede domingos
         if ($this->ehDomingo($data)) {
             return [
                 'sucesso' => false,
-                'mensagem' => 'Não é possível realizar agendamentos aos domingos.'
+                'mensagem' =>
+                    'Não é possível realizar agendamentos aos domingos.'
             ];
         }
 
-
-        // Verifica se o horário existe
-        if (!in_array($hora, $this->horarios)) {
+        // Valida horário
+        if (!in_array($hora, $this->horarios, true)) {
             return [
                 'sucesso' => false,
                 'mensagem' => 'Horário inválido.'
             ];
         }
 
+        // =====================================================
+        // VERIFICAR FERIADOS - BRASILAPI
+        // =====================================================
 
-        // Verifica se o horário já foi ocupado
-        if ($this->agendamento->horarioOcupado($data, $hora)) {
+        try {
+
+            $feriado = $this->consultarFeriado($data);
+
+            if ($feriado !== null) {
+                return [
+                    'sucesso' => false,
+                    'mensagem' =>
+                        'Não é possível agendar nesta data: '
+                        . $feriado['name'] . '.'
+                ];
+            }
+
+        } catch (Throwable $erro) {
+
+            error_log($erro->getMessage());
+
             return [
                 'sucesso' => false,
-                'mensagem' => 'Esse horário já foi agendado. Escolha outro horário.'
+                'mensagem' =>
+                    'Não foi possível verificar os feriados. '
+                    . 'Tente novamente.'
             ];
         }
 
+        // Verifica se o horário está ocupado
+        if ($this->agendamento->horarioOcupado($data, $hora)) {
+            return [
+                'sucesso' => false,
+                'mensagem' =>
+                    'Esse horário já foi agendado. Escolha outro horário.'
+            ];
+        }
 
         // Salva no banco
         $resultado = $this->agendamento->criar(
@@ -169,7 +194,6 @@ class AgendamentoController
             $hora
         );
 
-
         if ($resultado) {
             return [
                 'sucesso' => true,
@@ -177,40 +201,41 @@ class AgendamentoController
             ];
         }
 
-
         return [
             'sucesso' => false,
-            'mensagem' => 'Não foi possível realizar o agendamento.'
+            'mensagem' =>
+                'Não foi possível realizar o agendamento.'
         ];
     }
 
     // =========================================================
-    // EXCLUIR AGENDAMENTOS
+    // EXCLUIR AGENDAMENTO
     // =========================================================
 
     public function excluir($id)
-{
-    if (empty($id) || !is_numeric($id)) {
+    {
+        if (empty($id) || !is_numeric($id)) {
+            return [
+                'sucesso' => false,
+                'mensagem' => 'Agendamento inválido.'
+            ];
+        }
+
+        $resultado = $this->agendamento->excluir((int) $id);
+
+        if ($resultado) {
+            return [
+                'sucesso' => true,
+                'mensagem' => 'Agendamento excluído com sucesso.'
+            ];
+        }
+
         return [
             'sucesso' => false,
-            'mensagem' => 'Agendamento inválido.'
+            'mensagem' =>
+                'Não foi possível excluir o agendamento.'
         ];
     }
-
-    $resultado = $this->agendamento->excluir((int) $id);
-
-    if ($resultado) {
-        return [
-            'sucesso' => true,
-            'mensagem' => 'Agendamento excluído com sucesso.'
-        ];
-    }
-
-    return [
-        'sucesso' => false,
-        'mensagem' => 'Não foi possível excluir o agendamento.'
-    ];
-}
 
     // =========================================================
     // RETORNAR TODOS OS HORÁRIOS
@@ -221,22 +246,24 @@ class AgendamentoController
         return $this->horarios;
     }
 
-
     // =========================================================
     // VALIDAR DATA
     // =========================================================
 
     private function dataValida($data)
     {
+        if (!is_string($data)) {
+            return false;
+        }
+
         $dataObjeto = DateTime::createFromFormat(
-            'Y-m-d',
+            '!Y-m-d',
             $data
         );
 
         return $dataObjeto &&
                $dataObjeto->format('Y-m-d') === $data;
     }
-
 
     // =========================================================
     // VERIFICAR DOMINGO
@@ -246,40 +273,58 @@ class AgendamentoController
     {
         $dataObjeto = new DateTime($data);
 
-        // 0 = domingo
         return $dataObjeto->format('w') == 0;
     }
 }
 
-// ============================================================= 
-// BUSCAR HORÁRIOS DISPONÍVEIS 
-// ============================================================= 
+// =============================================================
+// BUSCAR HORÁRIOS DISPONÍVEIS - GET
+// =============================================================
 
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['buscar_horarios'])) {
-    require_once __DIR__ . '/../config/conexao.php'; 
+if (
+    $_SERVER['REQUEST_METHOD'] === 'GET' &&
+    isset($_GET['buscar_horarios'])
+) {
 
-    $conexao = new conexao(); 
-    $pdo = $conexao->conectar(); 
-    
-    $controller = new AgendamentoController($pdo); 
-    
-    $data = $_GET['data'] ?? ''; 
-    
-    $horariosDisponiveis = $controller->horariosDisponiveis($data); 
-    
-    header('Content-Type: application/json'); 
-    
-    echo json_encode([ 
-        'sucesso' => true, 
-        'horarios' => $horariosDisponiveis 
-    ]); 
+    require_once __DIR__ . '/../config/conexao.php';
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+
+        $conexao = new conexao();
+        $pdo = $conexao->conectar();
+
+        $controller = new AgendamentoController($pdo);
+
+        $data = $_GET['data'] ?? '';
+
+        $horariosDisponiveis =
+            $controller->horariosDisponiveis($data);
+
+        echo json_encode([
+            'sucesso' => true,
+            'horarios' => $horariosDisponiveis
+        ]);
+
+    } catch (Throwable $erro) {
+
+        error_log($erro->getMessage());
+
+        http_response_code(503);
+
+        echo json_encode([
+            'sucesso' => false,
+            'mensagem' =>
+                'Não foi possível verificar a disponibilidade.'
+        ]);
+    }
+
+    exit;
 }
 
-
-
-
 // =============================================================
-// PROCESSAR FORMULÁRIO
+// PROCESSAR FORMULÁRIO - POST
 // =============================================================
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -291,9 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $controller = new AgendamentoController($pdo);
 
-    // Verifica qual ação foi solicitada
     $acao = $_POST['acao'] ?? 'criar';
-
 
     // =========================================================
     // EXCLUIR AGENDAMENTO
@@ -305,13 +348,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $resultado = $controller->excluir($id);
 
-        header('Content-Type: application/json');
+        header('Content-Type: application/json; charset=utf-8');
 
         echo json_encode($resultado);
 
         exit;
     }
-
 
     // =========================================================
     // CRIAR AGENDAMENTO
@@ -329,19 +371,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hora
     );
 
-
     // Guarda a mensagem na sessão
-    session_start();
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
 
     $_SESSION['agendamento_mensagem'] = $resultado['mensagem'];
     $_SESSION['agendamento_sucesso'] = $resultado['sucesso'];
 
-
-    // Volta para a página de agendamento
+    // Mantém o fluxo atual do seu formulário
     header('Location: ../index.php');
 
     exit;
 }
-
-
-
