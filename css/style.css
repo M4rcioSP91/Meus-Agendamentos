@@ -324,3 +324,77 @@ body {
     padding-right: 15px;
 }
 
+
+/* =========================================
+   ACESSIBILIDADE - TAMANHO DA FONTE
+========================================= */
+
+:root {
+    --escala-fonte: 1;
+}
+
+/* Conteúdo geral */
+body {
+    font-size: calc(16px * var(--escala-fonte));
+}
+
+/* Menu lateral */
+#accordionSidebar a,
+#accordionSidebar span,
+#accordionSidebar .nav-link,
+#accordionSidebar .sidebar-heading,
+#accordionSidebar .collapse-item {
+    font-size: calc(14px * var(--escala-fonte));
+}
+
+/* Páginas carregadas por fetch */
+#conteudo p,
+#conteudo span,
+#conteudo a,
+#conteudo label,
+#conteudo small,
+#conteudo li,
+#conteudo td,
+#conteudo th,
+#conteudo h1,
+#conteudo h2,
+#conteudo h3,
+#conteudo h4,
+#conteudo h5,
+#conteudo h6,
+#conteudo button,
+#conteudo input,
+#conteudo select,
+#conteudo textarea {
+    font-size: calc(16px * var(--escala-fonte));
+}
+
+/* Mantém os títulos proporcionais */
+#conteudo h1 {
+    font-size: calc(28px * var(--escala-fonte));
+}
+
+#conteudo h2 {
+    font-size: calc(24px * var(--escala-fonte));
+}
+
+#conteudo h3 {
+    font-size: calc(20px * var(--escala-fonte));
+}
+
+/* Evita que textos grandes estourem os espaços */
+#conteudo,
+#accordionSidebar {
+    overflow-wrap: break-word;
+}
+
+/* Botões de acessibilidade */
+.acessibilidade-fonte button {
+    min-width: 38px;
+    font-weight: bold;
+}
+
+.acessibilidade-fonte button:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+}

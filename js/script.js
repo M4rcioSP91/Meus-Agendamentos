@@ -1411,3 +1411,89 @@ document.addEventListener("submit", async function (event) {
 
 });
 
+// =========================================================
+// ACESSIBILIDADE - AUMENTAR E DIMINUIR FONTE
+// =========================================================
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const raiz = document.documentElement;
+
+    const botaoAumentar = document.getElementById("aumentarFonte");
+    const botaoDiminuir = document.getElementById("diminuirFonte");
+    const botaoNormal = document.getElementById("fonteNormal");
+
+    // Recupera o tamanho salvo anteriormente
+    let escala = Number(localStorage.getItem("escalaFonte")) || 1;
+
+    // Limites de tamanho
+    const escalaMinima = 0.9;
+    const escalaMaxima = 1.3;
+    const passo = 0.1;
+
+    // Aplica o tamanho da fonte
+    function aplicarFonte() {
+
+        raiz.style.setProperty(
+            "--escala-fonte",
+            escala
+        );
+
+        localStorage.setItem("escalaFonte", escala.toString());
+
+        // Atualiza o estado dos botões
+        if (botaoAumentar) {
+            botaoAumentar.disabled = escala >= escalaMaxima;
+        }
+
+        if (botaoDiminuir) {
+            botaoDiminuir.disabled = escala <= escalaMinima;
+        }
+    }
+
+    // Aumentar fonte
+    if (botaoAumentar) {
+
+        botaoAumentar.addEventListener("click", function () {
+
+            escala = Math.min(
+                escala + passo,
+                escalaMaxima
+            );
+
+            aplicarFonte();
+
+        });
+    }
+
+    // Diminuir fonte
+    if (botaoDiminuir) {
+
+        botaoDiminuir.addEventListener("click", function () {
+
+            escala = Math.max(
+                escala - passo,
+                escalaMinima
+            );
+
+            aplicarFonte();
+
+        });
+    }
+
+    // Restaurar tamanho original
+    if (botaoNormal) {
+
+        botaoNormal.addEventListener("click", function () {
+
+            escala = 1;
+
+            aplicarFonte();
+
+        });
+    }
+
+    // Aplica a preferência salva ao abrir o site
+    aplicarFonte();
+
+});

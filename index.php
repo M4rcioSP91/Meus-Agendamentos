@@ -246,6 +246,53 @@ session_start();
                         </button>
                         </div>
 
+                        <div class="topbar-divider d-none d-sm-block"></div>
+
+                    
+                    <!-- ACESSIBILIDADE - TAMANHO DA FONTE -->
+                    <div class="acessibilidade-fonte px-3 py-3">
+
+                        <p class="text-white small mb-2">
+                            Tamanho da fonte
+                        </p>
+
+                        <div class="d-flex gap-2">
+
+                            <button
+                                type="button"
+                                id="diminuirFonte"
+                                class="btn btn-light btn-sm"
+                                title="Diminuir fonte"
+                                aria-label="Diminuir tamanho da fonte"
+                            >
+                                A-
+                            </button>
+
+                            <button
+                                type="button"
+                                id="aumentarFonte"
+                                class="btn btn-light btn-sm"
+                                title="Aumentar fonte"
+                                aria-label="Aumentar tamanho da fonte"
+                            >
+                                A+
+                            </button>
+
+                            <button
+                                type="button"
+                                id="fonteNormal"
+                                class="btn btn-light btn-sm"
+                                title="Restaurar fonte"
+                                aria-label="Restaurar tamanho padrão"
+                            >
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
                     
 
                 </nav>

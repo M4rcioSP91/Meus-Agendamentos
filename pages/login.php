@@ -32,14 +32,15 @@
                     </div>
                     <input type="submit" class="btn btn-primary-1" value="Entrar">
                 </form>
+                <a href="recuperar_senha.php">Esqueci a Senha</a>
             </div>
             <div class="col-md-6 order-md-1">
                 <div class="col-12">
                 <img src="../img/sign_in.svg" alt="Hello New Customer" class="img-fluid">
                 </div>
-                <div class="col-12" id="link-container">
+                <div class="col-6" id="link-container">
                 <a href="../index.php">Voltar para home</a>
-                </div>
+                
             </div>
         </div>
     </div>
